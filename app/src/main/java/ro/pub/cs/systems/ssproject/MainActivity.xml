@@ -1,0 +1,30 @@
+// În metoda onCreate(), înlocuiți blocul de creare a MqttHandler cu:
+ 
+val useTls = intent.getBooleanExtra("useTls", false)
+ 
+val sslSocketFactory = if (useTls) {
+    TlsHelper.createMtlsSocketFactory(
+        context = this,
+        trustStoreResId = R.raw.truststore,
+        keyStoreResId = R.raw.keystore
+    )
+} else {
+    null
+}
+ 
+mqttHandler = MqttHandler(
+    brokerIp,
+    brokerPort,
+    sslSocketFactory = sslSocketFactory,
+    isConnectedCallback = { isConnected ->
+        runOnUiThread {
+            handleConnectionStateChange(isConnected)
+        }
+    },
+    onCommandReceived = { command ->
+        runOnUiThread {
+            appendLog(getString(R.string.main_logs_command_received_entry, command))
+            handleReceivedCommand(command)
+        }
+    }
+)

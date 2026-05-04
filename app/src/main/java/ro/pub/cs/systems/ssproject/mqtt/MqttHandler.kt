@@ -17,9 +17,11 @@ class MqttHandler(
     private val isConnectedCallback: (Boolean) -> Unit,
     private val onCommandReceived: (String) -> Unit
 ) : MqttCallback {
-    private val brokerUrl = "tcp://$brokerIp:$brokerPort"
+    private val protocol = if (sslSocketFactory != null) "ssl" else "tcp"
+    private val brokerUrl = "$protocol://192.168.122.15:12345"
     private val clientId = "${Build.MANUFACTURER}_${Build.MODEL}_${MqttClient.generateClientId()}"
     private var client: MqttClient? = null
+ 
 
     suspend fun connect() {
         withContext(Dispatchers.IO) {
@@ -35,6 +37,12 @@ class MqttHandler(
                     isCleanSession = true
                     connectionTimeout = 10
                     keepAliveInterval = 60
+
+                
+                // Configurarea TLS dacă SSLSocketFactory este disponibil
+                if (sslSocketFactory != null) {
+                    socketFactory = sslSocketFactory
+                }
                 }
 
                 client?.connect(options)
